@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel de Câmbio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap">
+<style>
+:root{--blue:#00579d;--blue-d:#003a70;--navy:#0a1f3c;--sky:#00a1e4;--bg:#f2f5f9;--line:#dce4ee;--ink:#12233d;--mute:#5d6f89;--up:#0e9a58;--down:#d63b3b;--r:14px;
+font-family:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);line-height:1.5;font-size:16px}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--sky);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+.wrap{max-width:1180px;margin:0 auto;padding:0 clamp(16px,4vw,32px)}
+
+/* barra superior */
+.top{background:var(--navy);color:#b8c7de;font-size:.82rem}
+.top .wrap{display:flex;justify-content:space-between;gap:12px;padding-top:7px;padding-bottom:7px;flex-wrap:wrap}
+.status{display:flex;align-items:center;gap:8px}
+.dot{width:8px;height:8px;border-radius:50%;background:#7e92b0}
+.ok .dot{background:#38d188}.err .dot,.demo .dot{background:#ffb347}.load .dot{animation:pulse 1s infinite alternate}
+@keyframes pulse{to{opacity:.25}}
+
+/* cabeçalho */
+.head{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.head .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;height:68px}
+.brand{display:flex;align-items:center;gap:10px;font-family:"Barlow Condensed",sans-serif;font-size:1.6rem;font-weight:700;color:var(--blue);letter-spacing:.01em;text-decoration:none}
+.brand i{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--blue),var(--sky));display:grid;place-items:center;color:#fff;font-style:normal;font-size:1.1rem}
+nav{display:flex;gap:26px}
+nav a{color:var(--ink);text-decoration:none;font-weight:500;padding:6px 0;border-bottom:3px solid transparent}
+nav a:hover{color:var(--blue);border-color:var(--sky)}
+@media(max-width:700px){nav{display:none}}
+.btn{border:0;border-radius:999px;background:var(--blue);color:#fff;padding:9px 20px;font-weight:600;cursor:pointer;transition:background .15s}
+.btn:hover{background:var(--blue-d)}
+.btn.ghost{background:#fff;color:var(--blue);border:1.5px solid var(--blue)}
+.btn.ghost:hover{background:#eaf3fb}
+
+/* hero */
+.hero{background:radial-gradient(1200px 380px at 85% -10%,rgba(0,161,228,.45),transparent 60%),linear-gradient(120deg,var(--blue-d),var(--blue));color:#fff;padding:clamp(36px,6vw,64px) 0 clamp(70px,9vw,96px);position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(135deg,rgba(255,255,255,.05) 0 2px,transparent 2px 26px);pointer-events:none}
+.hero .wrap{position:relative;z-index:1}
+.hero h1{font-family:"Barlow Condensed",sans-serif;font-size:clamp(2.4rem,6vw,4.2rem);line-height:1;margin:0 0 12px;font-weight:700;letter-spacing:.005em}
+.hero p{margin:0;max-width:52ch;color:#d3e4f6;font-size:1.1rem}
+
+/* seções */
+section.s{padding:clamp(28px,5vw,48px) 0}
+.pull{margin-top:-52px;position:relative;z-index:2}
+.sh{display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.sh h2{margin:0;font-family:"Barlow Condensed",sans-serif;font-size:1.9rem;color:var(--blue-d);font-weight:700}
+.pull .sh h2{color:#fff}
+.add{display:flex;gap:8px}
+.add input{border:0;border-radius:999px;padding:9px 18px;min-width:0;width:200px;background:#fff;box-shadow:0 1px 3px rgba(10,31,60,.18)}
+#addMsg{color:#ffd6d6;font-size:.88rem;min-height:1.3em;margin:-8px 0 10px}
+.banner{background:#fff4e0;border:1px solid #ffd08a;color:#7a4b00;border-radius:12px;padding:12px 16px;margin-bottom:18px;display:none;font-size:.95rem}
+.banner.on{display:block}
+
+/* cartões de cotação */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px}
+.card{background:#fff;border:2px solid transparent;border-radius:var(--r);padding:18px;text-align:left;cursor:pointer;box-shadow:0 4px 18px rgba(10,31,60,.08);position:relative;display:grid;gap:10px;transition:transform .15s,box-shadow .15s}
+.card:hover{transform:translateY(-3px);box-shadow:0 10px 26px rgba(10,31,60,.14)}
+.card[aria-pressed=true]{border-color:var(--sky)}
+.ct{display:flex;align-items:center;gap:12px}
+.sym{width:42px;height:42px;border-radius:50%;background:#e6f1fb;color:var(--blue);display:grid;place-items:center;font-weight:700;font-size:1.25rem;flex:none}
+.ct b{display:block;font-size:1.05rem;line-height:1.2}
+.ct small{color:var(--mute)}
+.price{font-size:1.85rem;font-weight:700;letter-spacing:-.01em;line-height:1.1}
+.pill{display:inline-block;border-radius:999px;padding:2px 10px;font-size:.85rem;font-weight:600}
+.pill.up{background:#e2f6ec;color:var(--up)}.pill.down{background:#fde6e6;color:var(--down)}
+.range{height:6px;background:#e5ecf5;border-radius:6px;position:relative}
+.range i{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:var(--blue);border:2px solid #fff;box-shadow:0 0 0 1px var(--blue);transform:translateX(-50%)}
+.rl{display:flex;justify-content:space-between;font-size:.8rem;color:var(--mute)}
+.rm{position:absolute;right:10px;top:10px;border:0;background:none;color:var(--mute);cursor:pointer;font-size:1rem;border-radius:6px;padding:2px 7px}
+.rm:hover{color:var(--down);background:#fde6e6}
+
+/* análise */
+.panel{background:#fff;border-radius:var(--r);box-shadow:0 4px 18px rgba(10,31,60,.08);padding:clamp(18px,3vw,30px)}
+.an-top{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:20px}
+.an-top .big{font-size:clamp(2.2rem,5vw,3.2rem);font-weight:700;letter-spacing:-.02em;line-height:1.05}
+.an-top .lbl{color:var(--mute)}
+.stats{display:grid;grid-template-columns:repeat(4,auto);gap:6px 28px;align-content:center}
+.stats span{color:var(--mute);font-size:.85rem}.stats b{display:block;font-size:1.15rem}
+@media(max-width:620px){.stats{grid-template-columns:repeat(2,auto)}}
+#tip{color:var(--mute);min-height:1.5em;margin-bottom:6px}
+svg{width:100%;height:auto;display:block;touch-action:none}
+.empty{padding:36px 12px;text-align:center;color:var(--mute)}
+
+/* conversor */
+.conv{background:linear-gradient(120deg,var(--blue-d),var(--blue));border-radius:var(--r);color:#fff;padding:clamp(22px,4vw,38px);display:grid;grid-template-columns:1fr 1.4fr;gap:26px;align-items:center}
+@media(max-width:760px){.conv{grid-template-columns:1fr}}
+.conv h2{font-family:"Barlow Condensed",sans-serif;font-size:2rem;margin:0 0 6px}
+.conv p{margin:0;color:#d3e4f6}
+.fields{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:end}
+@media(max-width:520px){.fields{grid-template-columns:1fr}.fields .eq{display:none}}
+.fields label{display:grid;gap:6px;font-size:.9rem;color:#d3e4f6}
+.fields input{border:0;border-radius:10px;padding:12px 14px;font-size:1.2rem;width:100%;color:var(--ink)}
+.eq{padding-bottom:12px;font-size:1.4rem}
+
+footer{background:var(--navy);color:#9fb2cf;padding:24px 0;font-size:.9rem;margin-top:20px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+
+<div class="top"><div class="wrap">
+  <span>Cotações de moedas e criptomoedas em reais</span>
+  <div class="status load" id="status" role="status" aria-live="polite"><span class="dot"></span><span id="stxt">Carregando…</span></div>
+</div></div>
+
+<header class="head"><div class="wrap">
+  <a class="brand" href="#topo"><i>$</i>Painel de Câmbio</a>
+  <nav aria-label="Seções"><a href="#cotacoes">Cotações</a><a href="#analise">Análise</a><a href="#conversor">Conversor</a></nav>
+  <button class="btn" id="refresh" type="button">Atualizar</button>
+</div></header>
+
+<div class="hero" id="topo"><div class="wrap">
+  <h1>Câmbio em tempo real,<br>sem complicação.</h1>
+  <p>Acompanhe dólar, euro, libra, peso argentino, Bitcoin e Ethereum. O painel se atualiza sozinho a cada 30 segundos.</p>
+</div></div>
+
+<section class="s pull" id="cotacoes"><div class="wrap">
+  <div class="sh">
+    <h2>Cotações</h2>
+    <form class="add" id="addForm" autocomplete="off">
+      <input id="addInput" placeholder="Adicionar par, ex: JPY-BRL" aria-label="Adicionar par de moedas" maxlength="9">
+      <button class="btn ghost" type="submit">Adicionar</button>
+    </form>
+  </div>
+  <div id="addMsg" role="alert"></div>
+  <div class="banner" id="banner"><b>Sem acesso à API.</b> Os valores abaixo são <b>dados de exemplo</b>, não cotações reais. Abra este arquivo direto no navegador (e não em um visualizador embutido) e verifique sua internet. A página tenta de novo sozinha.</div>
+  <div class="cards" id="cards"></div>
+</div></section>
+
+<section class="s" id="analise"><div class="wrap">
+  <div class="sh"><h2>Análise</h2></div>
+  <div class="panel" id="analise-box"></div>
+</div></section>
+
+<section class="s" id="conversor"><div class="wrap">
+  <div class="conv">
+    <div><h2>Conversor</h2><p id="convTxt">Converta valores usando a cotação da moeda selecionada.</p></div>
+    <div class="fields" id="fields"></div>
+  </div>
+</div></section>
+
+<footer><div class="wrap">Dados fornecidos pela AwesomeAPI (economia.awesomeapi.com.br). Sem chave de acesso, as cotações têm cache de até 1 minuto. Informativo, não é recomendação de investimento.</div></footer>
+
+<script>
+"use strict";
+const BASE = "https://economia.awesomeapi.com.br/json";
+const PADRAO = /^[A-Z]{3,5}-[A-Z]{3}$/;
+const INTERVALO = 30;
+const FIXOS = {"USD-BRL":"Dólar Americano","EUR-BRL":"Euro","GBP-BRL":"Libra Esterlina","ARS-BRL":"Peso Argentino","BTC-BRL":"Bitcoin","ETH-BRL":"Ethereum"};
+const SIMBOLO = {USD:"$",EUR:"€",GBP:"£",ARS:"$",BTC:"₿",ETH:"Ξ",JPY:"¥",CAD:"$",AUD:"$",CHF:"₣"};
+/* valores de exemplo, usados só quando a API não responde */
+const DEMO = {"USD-BRL":[5.45,0.35],"EUR-BRL":[6.32,-0.18],"GBP-BRL":[7.28,0.12],"ARS-BRL":[0.0038,-0.4],"BTC-BRL":[372000,1.9],"ETH-BRL":[14200,-0.8]};
+
+const $ = s => document.querySelector(s);
+const chave = p => p.replace("-","");
+function safeGet(k){ try { return localStorage.getItem(k); } catch (e) { return null; } }
+function safeSet(k,v){ try { localStorage.setItem(k,v); } catch (e) {} }
+function lerPares(){ try { const a = JSON.parse(safeGet("pares") || "[]"); return Array.isArray(a) ? a.filter(p => PADRAO.test(p)) : []; } catch (e) { return []; } }
+
+let pares = [...Object.keys(FIXOS), ...lerPares()];
+let sel = pares[0], dados = {}, histCache = {}, restante = INTERVALO, ultima = null, estado = "load", demo = false;
+
+function moeda(v, cod){
+  const n = +v, casas = Math.abs(n) >= 1 ? 2 : 6;
+  try { return new Intl.NumberFormat("pt-BR",{style:"currency",currency:cod || "BRL",minimumFractionDigits:casas,maximumFractionDigits:casas}).format(n); }
+  catch (e) { return n.toLocaleString("pt-BR",{minimumFractionDigits:casas,maximumFractionDigits:casas}) + " " + cod; }
+}
+const pctTxt = v => (+v >= 0 ? "+" : "") + (+v).toFixed(2).replace(".",",") + "%";
+function el(tag, cls, txt){ const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
+
+/* ---------- dados de exemplo ---------- */
+function demoDados(){
+  const o = {};
+  pares.forEach(p => {
+    const [c, ci] = p.split("-"), [base, pct] = DEMO[p] || [1, 0];
+    o[chave(p)] = {code:c, codein:ci, name:(FIXOS[p] || p) + "/" + ci, bid:base, ask:base*1.002, high:base*1.012, low:base*0.988, pctChange:pct, create_date:"dados de exemplo"};
+  });
+  return o;
+}
+function demoHist(par){
+  let s = 7; par.split("").forEach(ch => s = (s * 31 + ch.charCodeAt(0)) % 9973);
+  const base = (DEMO[par] || [1])[0], out = []; let v = base * 0.95;
+  for (let i = 29; i >= 0; i--){ s = (s * 9301 + 49297) % 233280; v *= 1 + ((s / 233280) - 0.48) * 0.025; out.push({v, t:new Date(Date.now() - i * 864e5)}); }
+  const k = base / out[out.length-1].v; out.forEach(p => p.v *= k);
+  return out;
+}
+
+/* ---------- status ---------- */
+function setStatus(s){
+  estado = s;
+  $("#status").className = "status " + (s === "err" ? "demo" : s);
+  const t = $("#stxt");
+  if (s === "load") t.textContent = "Atualizando…";
+  else if (s === "err") t.textContent = "Sem conexão com a API (dados de exemplo). Nova tentativa em " + restante + "s";
+  else t.textContent = "Atualizado às " + ultima.toLocaleTimeString("pt-BR") + ". Próxima em " + restante + "s";
+}
+
+/* ---------- carregamento ---------- */
+async function carregar(){
+  setStatus("load");
+  try {
+    const r = await fetch(BASE + "/last/" + pares.join(","));
+    if (!r.ok) throw new Error(String(r.status));
+    const j = await r.json();
+    if (!j || typeof j !== "object" || !Object.keys(j).length) throw new Error("vazio");
+    dados = j; demo = false; ultima = new Date(); restante = INTERVALO;
+    renderTudo(); setStatus("ok");
+  } catch (e) {
+    dados = demoDados(); demo = true; restante = INTERVALO;
+    renderTudo(); setStatus("err");
+  }
+}
+
+async function obterHistorico(par){
+  const k = (demo ? "d:" : "r:") + par;
+  if (histCache[k] !== undefined) return histCache[k];
+  if (demo) return (histCache[k] = demoHist(par));
+  try {
+    const r = await fetch(BASE + "/daily/" + par + "/30");
+    if (!r.ok) throw new Error();
+    const j = await r.json();
+    return (histCache[k] = j.slice().reverse().map(d => ({v:+d.bid, t:new Date(d.timestamp * 1000)})));
+  } catch (e) { return null; }
+}
+
+/* ---------- renderização ---------- */
+function renderTudo(){
+  if (!dados[chave(sel)]) sel = pares[0];
+  $("#banner").classList.toggle("on", demo);
+  renderCards(); renderAnalise(); renderConversor();
+}
+
+function renderCards(){
+  const box = $("#cards"); box.replaceChildren();
+  pares.forEach(par => {
+    const d = dados[chave(par)];
+    const c = el("button","card"); c.type = "button"; c.setAttribute("aria-pressed", String(par === sel));
+    const ct = el("div","ct");
+    const nome = el("div"); nome.append(el("b",null,FIXOS[par] || (d ? d.name.split("/")[0] : par)), el("small",null,par));
+    ct.append(el("span","sym",SIMBOLO[par.split("-")[0]] || par[0]), nome);
+    c.append(ct);
+    if (d){
+      const up = +d.pctChange >= 0;
+      const linha = el("div"); linha.append(el("span","pill " + (up ? "up" : "down"), (up ? "▲ " : "▼ ") + pctTxt(d.pctChange)));
+      const faixa = (+d.high - +d.low) || 1, pos = Math.max(0, Math.min(100, (+d.bid - +d.low) / faixa * 100));
+      const rg = el("div","range"); const bolinha = el("i"); bolinha.style.left = pos + "%"; rg.append(bolinha);
+      const rl = el("div","rl num"); rl.append(el("span",null,moeda(d.low,d.codein)), el("span",null,moeda(d.high,d.codein)));
+      c.append(el("div","price num",moeda(d.bid,d.codein)), linha, rg, rl);
+    } else c.append(el("div","price","—"));
+    c.onclick = () => { sel = par; renderTudo(); document.getElementById("analise").scrollIntoView({behavior:"smooth",block:"start"}); };
+    box.append(c);
+    if (!FIXOS[par]){
+      const x = el("button","rm","✕"); x.type = "button"; x.title = "Remover " + par; x.setAttribute("aria-label","Remover " + par);
+      x.onclick = ev => { ev.stopPropagation(); remover(par); };
+      c.append(x);
+    }
+  });
+}
+
+async function renderAnalise(){
+  const box = $("#analise-box"), d = dados[chave(sel)];
+  box.replaceChildren();
+  if (!d){ box.append(el("div","empty","Sem cotação disponível para " + sel + ".")); return; }
+  const up = +d.pctChange >= 0;
+  const top = el("div","an-top");
+  const esq = el("div");
+  esq.append(el("div","lbl",d.name + " (" + sel + ")"), el("div","big num",moeda(d.bid,d.codein)), el("span","pill " + (up ? "up" : "down"),(up ? "▲ " : "▼ ") + pctTxt(d.pctChange) + " no dia"));
+  const st = el("div","stats num");
+  [["Venda",moeda(d.ask,d.codein)],["Máxima",moeda(d.high,d.codein)],["Mínima",moeda(d.low,d.codein)],["Cotação de",String(d.create_date)]].forEach(([r,v]) => {
+    const w = el("div"); w.append(el("span",null,r), el("b",null,v)); st.append(w);
+  });
+  top.append(esq, st);
+  const tip = el("div",null,"Carregando histórico…"); tip.id = "tip";
+  const gr = el("div"); gr.id = "chart";
+  box.append(top, el("div","lbl","Últimos 30 dias"), tip, gr);
+  const par = sel, pts = await obterHistorico(par);
+  if (par === sel && document.body.contains(gr)) desenhar(gr, tip, pts, d.codein);
+}
+
+function desenhar(box, tip, pts, cod){
+  if (!pts || pts.length < 2){ tip.textContent = ""; box.replaceChildren(el("div","empty","Histórico indisponível para este par.")); return; }
+  const W = 700, H = 240, P = 10;
+  const vs = pts.map(p => p.v), mn = Math.min(...vs), mx = Math.max(...vs), fx = (mx - mn) || 1;
+  const X = i => P + i * (W - 2*P) / (pts.length - 1), Y = v => H - P - (v - mn) / fx * (H - 2*P);
+  const sobe = pts[pts.length-1].v >= pts[0].v, cor = sobe ? "#0e9a58" : "#d63b3b";
+  const linha = pts.map((p,i) => (i ? "L" : "M") + X(i).toFixed(1) + "," + Y(p.v).toFixed(1)).join(" ");
+  const ns = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(ns,"svg"); svg.setAttribute("viewBox","0 0 " + W + " " + H); svg.setAttribute("role","img");
+  svg.setAttribute("aria-label","Gráfico dos últimos 30 dias: de " + moeda(pts[0].v,cod) + " para " + moeda(pts[pts.length-1].v,cod));
+  const mk = (t, at) => { const e = document.createElementNS(ns,t); for (const k in at) e.setAttribute(k, at[k]); svg.append(e); return e; };
+  for (let g = 0; g < 4; g++) mk("line",{x1:P,x2:W-P,y1:P + g*(H-2*P)/3,y2:P + g*(H-2*P)/3,stroke:"#e5ecf5","stroke-width":1});
+  mk("path",{d:linha + " L" + X(pts.length-1) + "," + H + " L" + X(0) + "," + H + " Z",fill:cor,opacity:".1"});
+  mk("path",{d:linha,fill:"none",stroke:cor,"stroke-width":3,"stroke-linejoin":"round","stroke-linecap":"round"});
+  const guia = mk("line",{y1:0,y2:H,stroke:"#5d6f89","stroke-width":1,opacity:0});
+  const bola = mk("circle",{r:6,fill:cor,stroke:"#fff","stroke-width":2,opacity:0});
+  const resumo = "Mínimo " + moeda(mn,cod) + " · máximo " + moeda(mx,cod) + " no período";
+  const mover = ev => {
+    const r = svg.getBoundingClientRect();
+    const i = Math.max(0, Math.min(pts.length-1, Math.round((ev.clientX - r.left) / r.width * (pts.length-1))));
+    guia.setAttribute("x1",X(i)); guia.setAttribute("x2",X(i)); guia.setAttribute("opacity",.6);
+    bola.setAttribute("cx",X(i)); bola.setAttribute("cy",Y(pts[i].v)); bola.setAttribute("opacity",1);
+    tip.textContent = pts[i].t.toLocaleDateString("pt-BR") + ": " + moeda(pts[i].v,cod);
+  };
+  svg.addEventListener("pointermove",mover); svg.addEventListener("pointerdown",mover);
+  svg.addEventListener("pointerleave",() => { guia.setAttribute("opacity",0); bola.setAttribute("opacity",0); tip.textContent = resumo; });
+  tip.textContent = resumo; box.replaceChildren(svg);
+}
+
+function renderConversor(){
+  const f = $("#fields"); f.replaceChildren();
+  const d = dados[chave(sel)]; if (!d) return;
+  const taxa = +d.bid, fmt = n => String(+n.toFixed(Math.abs(n) >= 1 ? 2 : 8));
+  $("#convTxt").textContent = "Usando a cotação de compra de " + sel + (demo ? " (dados de exemplo)." : ".");
+  const mkc = (rot) => { const l = el("label",null,rot), i = el("input"); i.type = "number"; i.min = "0"; i.step = "any"; l.append(i); return [l,i]; };
+  const [la,ia] = mkc(d.code), [lb,ib] = mkc(d.codein);
+  ia.value = "1"; ib.value = fmt(taxa);
+  ia.oninput = () => { ib.value = ia.value === "" ? "" : fmt(+ia.value * taxa); };
+  ib.oninput = () => { ia.value = ib.value === "" ? "" : fmt(+ib.value / taxa); };
+  f.append(la, el("span","eq","="), lb);
+}
+
+/* ---------- pares personalizados ---------- */
+async function adicionar(ev){
+  ev.preventDefault();
+  const msg = $("#addMsg"), inp = $("#addInput"), par = inp.value.trim().toUpperCase();
+  msg.textContent = "";
+  if (!PADRAO.test(par)){ msg.textContent = "Formato inválido. Use MOEDA-MOEDA, ex: JPY-BRL."; return; }
+  if (pares.includes(par)){ msg.textContent = par + " já está na lista."; sel = par; renderTudo(); return; }
+  try {
+    const r = await fetch(BASE + "/last/" + par);
+    if (r.status === 404){ msg.textContent = par + " não é suportado pela API."; return; }
+    if (!r.ok) throw new Error();
+    const j = await r.json();
+    if (!j[chave(par)]) throw new Error();
+    demo = false; Object.assign(dados, j);
+  } catch (e) { msg.textContent = "Não foi possível validar o par agora. Verifique sua internet."; return; }
+  pares.push(par); sel = par; inp.value = "";
+  safeSet("pares", JSON.stringify(pares.filter(p => !FIXOS[p])));
+  renderTudo();
+}
+function remover(par){
+  pares = pares.filter(p => p !== par);
+  if (sel === par) sel = pares[0];
+  safeSet("pares", JSON.stringify(pares.filter(p => !FIXOS[p])));
+  renderTudo();
+}
+
+/* ---------- inicialização ---------- */
+$("#refresh").onclick = carregar;
+$("#addForm").addEventListener("submit", adicionar);
+setInterval(() => {
+  if (document.hidden || estado === "load") return;
+  restante--;
+  if (restante <= 0) return carregar();
+  setStatus(estado);
+}, 1000);
+
+dados = demoDados(); demo = true; renderTudo();   /* mostra a estrutura enquanto a API responde */
+$("#banner").classList.remove("on");
+carregar();
+</script>
+</body>
+</html>
